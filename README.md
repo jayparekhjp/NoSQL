@@ -4,13 +4,13 @@
 
 Select one CP and one AP NoSQL database.
 
-### For each Database
+### Configuration
 
 1. Set up your cluster as AWS EC2 Instances.
 
 2. Set up the Experiments (i.e. Test Cases) to answer the following questions:
 
-### For both AP and CP Databases
+### Questions
 
 1. How does the system function during normal mode (i.e. no partition)
 
@@ -43,7 +43,9 @@ Select one CP and one AP NoSQL database.
     * Allocate New Address
     * Associate it to **mongo-master**
     * Name it as **mongo-master**
-    >52.9.23.124
+    ```
+    52.9.23.124
+    ```
 
 1. Connect to **mongo-master**
      ```bash
