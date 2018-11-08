@@ -43,22 +43,15 @@ Select one CP and one AP NoSQL database.
     * Allocate New Address
     * Associate it to **mongo-master**
     * Name it as **mongo-master**
-<<<<<<< HEAD
-    * Elastic IP for **mongo-master**:
+    * Elastic IP for **mongo-master**
         ```bash
         52.9.23.124
         ```
-=======
-    ```
-    52.9.23.124
-    ```
->>>>>>> 01d9407f627b5f00a04299f3d9345d00360ba266
 
 1. Connect to **mongo-master**
      ```bash
     chmod 400 cmpe281-us-west-1.pem
     ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-52-9-23-124.us-west-1.compute.amazonaws.com
-<<<<<<< HEAD
     ```
 
 1. Install MongoDB Community Edition
@@ -80,6 +73,3 @@ Select one CP and one AP NoSQL database.
         ```bash
         sudo yum install -y mongodb-org
         ```
-=======
-    ```
->>>>>>> 01d9407f627b5f00a04299f3d9345d00360ba266
