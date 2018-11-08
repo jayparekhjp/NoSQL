@@ -34,27 +34,27 @@ Select one CP and one AP NoSQL database.
     * Network: CMPE281
     * Subnet: Public Subnet
     * Auto-assign Public IP: Disable
-    * Tag: mongo-master
+    * Tag: mongo-primary
     * Security Group: mongo
       * Ports: 22, 27017
     * Keypair: cmpe281-us-west-1.pem
 
-1. Give Elastic IP to **mongo-master**
+1. Give Elastic IP to **mongo-primary**
     * Allocate New Address
-    * Associate it to **mongo-master**
-    * Name it as **mongo-master**
-    * Elastic IP for **mongo-master**
+    * Associate it to **mongo-primary**
+    * Name it as **mongo-primary**
+    * Elastic IP for **mongo-primary**
         ```bash
         52.9.23.124
         ```
 
-1. Connect to **mongo-master**
+1. Connect to **mongo-primary**
      ```bash
     chmod 400 cmpe281-us-west-1.pem
     ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-52-9-23-124.us-west-1.compute.amazonaws.com
     ```
 
-1. Install MongoDB Community Edition
+1. Install MongoDB
     * Configure the package management system.
         * Create a /etc/yum.repos.d/mongodb-org-4.0.repo file to install MongoDB directly using yum.
             ```bash
@@ -69,7 +69,39 @@ Select one CP and one AP NoSQL database.
             enabled=1
             gpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc
             ```
-    * Install MongoDB packages.
+    * Install MongoDB packages
         ```bash
         sudo yum install -y mongodb-org
         ```
+1. Run Mongo Commands to Test Installation
+    * Start MongoDB
+        ```bash
+        sudo service mongod start
+        ```
+    * Verify **mongod** process has started
+        ```bash
+        sudo cat /var/log/mongodb/mongod.log 
+        ```
+    * Ensure MongoDB will start after reboot also
+        ```bash
+        sudo chkconfig mongod on
+        ```
+    * Stop MongoDB
+        ```bash
+        sudo service mongod stop
+        ```
+    * Restart MongoDB
+        ```bash
+        sudo service mongod restart
+        ```
+    * Begin MongoDB CLI
+        ```bash
+        mongo
+        ```
+    * Exit MongoDB CLI
+        ```bash
+        exit
+        ```
+1. Create Image of **mongo-primary**
+    * Image Name: mongodb
+    * Image Description: mongodb-version 4
