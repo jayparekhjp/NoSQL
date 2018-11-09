@@ -43,7 +43,6 @@ Select one CP and one AP NoSQL database.
     * Allocate New Address
     * Associate it to **mongo-primary**
     * Name it as **mongo-primary**
-    * Elastic IP for **mongo-primary**
         ```bash
         52.9.23.124
         ```
@@ -105,3 +104,26 @@ Select one CP and one AP NoSQL database.
 1. Create Image of **mongo-primary**
     * Image Name: mongodb
     * Image Description: mongodb-version 4
+
+1. Launch Secondary Instances
+    * AMI: mongodb
+    * Instance Type: t2.micro
+    * Number of Instances: 5
+    * Network: CMPE281
+    * Subnet: Public Subnet
+    * Auto-assign Public IP: Enable
+    * Security Group: mongo
+        * Ports: 22,27017
+    * Key: cmpe281-us-west-2.pem
+    * *Give them names mongo-secondary1, mongo-secondary2, mongo-secondary3, mongo-secondary4, mongo-secondary5 for better understanding*
+
+1. IP Table for Instances
+
+    |Instance|IP|SSH|
+    |--------|--|---|
+    |mongo-primary|52.9.23.124|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-52-9-23-124.us-west-1.compute.amazonaws.com
+    |mongo-secondary1|52.53.174.32|ssh -i "cmpe281-us-west-1.pem" root@ec2-52-53-174-32.us-west-1.compute.amazonaws.com
+    |mongo-secondary2|13.56.178.86|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-178-86.us-west-1.compute.amazonaws.com
+    |mongo-secondary3|18.144.11.254|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-11-254.us-west-1.compute.amazonaws.com
+    |mongo-secondary4|13.57.178.76|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-57-178-76.us-west-1.compute.amazonaws.com
+    |mongo-secondary5|13.57.185.229|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-57-185-229.us-west-1.compute.amazonaws.com
