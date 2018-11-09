@@ -73,17 +73,21 @@ Select one CP and one AP NoSQL database.
         sudo yum install -y mongodb-org
         ```
 1. Run Mongo Commands to Test Installation
-    * Start MongoDB
+    * Verify mongod process has started
         ```bash
-        sudo service mongod start
-        ```
-    * Verify **mongod** process has started
-        ```bash
-        sudo cat /var/log/mongodb/mongod.log 
+        sudo cat /var/log/mongodb/mongod.log
         ```
     * Ensure MongoDB will start after reboot also
         ```bash
         sudo chkconfig mongod on
+        ```
+    * Check Status MongoDB
+        ```bash
+        sudo service mongod status
+        ```
+    * Start MongoDB
+        ```bash
+        sudo service mongod start
         ```
     * Stop MongoDB
         ```bash
@@ -117,7 +121,7 @@ Select one CP and one AP NoSQL database.
     * Key: cmpe281-us-west-2.pem
     * *Give them names mongo-secondary1, mongo-secondary2, mongo-secondary3, mongo-secondary4, mongo-secondary5 for better understanding*
 
-1. IP Table for Instances
+1. Information of Instances
 
     |Instance|IP|SSH|
     |--------|--|---|
