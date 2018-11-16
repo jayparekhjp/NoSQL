@@ -29,10 +29,10 @@ Select one CP and one AP NoSQL database.
 #### **Progress**
 
 * [x] Create MongoDB Cluster
-* [] Create Partition
-* [] Test CP Properties
-* [] Test MongoDB Extras
-* [] Create Shards
+* [ ] Create Partition
+* [ ] Test CP Properties
+* [ ] Test MongoDB Extras
+* [ ] Create Shards
 
 #### Step 1: Create MongoDB Cluster
 
