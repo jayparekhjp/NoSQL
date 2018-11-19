@@ -29,16 +29,15 @@ Select one CP and one AP NoSQL database.
 #### **Progress**
 
 * [x] Create MongoDB Cluster
-* [ ] Create Partition
 * [ ] Test CP Properties
 * [ ] Test MongoDB Extras
 * [ ] Create Shards
 
-#### Step 1: Create MongoDB Cluster
+#### Create MongoDB Cluster
 
-**Reference**: <https://github.com/paulnguyen/cmpe281/blob/master/labs/lab4/aws-mongodb-replica-set.md>
+***Reference**: <https://github.com/paulnguyen/cmpe281/blob/master/labs/lab4/aws-mongodb-replica-set.md>*
 
-<!--1. Create Jumpbox
+1. Create Jumpbox
 
     **Note:** *Since all the instances will be in private subnet, jumpbox is needed to access them*
     * AMI: Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type
@@ -50,14 +49,13 @@ Select one CP and one AP NoSQL database.
     * Security Group: **jumpbox**
       * Ports: 22, 80
     * Keypair: cmpe281-us-west-1.pem
--->
 
 1. Creating an EC2 Instance
     * AMI: Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
     * Instance Type: t2.micro
     * Network: CMPE281
-    * Subnet: Public Subnet
-    * Auto-assign Public IP: Enable
+    * Subnet: Private Subnet
+    * Auto-assign Public IP: Disable
     * Tag: **mongo-primary**
     * Security Group: mongo
       * Ports: 22, 27017
@@ -65,31 +63,25 @@ Select one CP and one AP NoSQL database.
 
 1. Connecting to **mongo-primary**
 
-   ```bash
-    ssh -i "cmpe281-us-west-1.pem" ubuntu@ec2-54-183-146-72.us-west-1.compute.amazonaws.com
-   ```
+    * Upload key to **jumpbox**
+        ```bash
+        scp -i cmpe281-us-west-1.pem cmpe281-us-west-1.pem ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com:
+        ```
+    * Connect to **jumpbox**
+        ```bash
+        chmod 400 cmpe281-us-west-1.pem
+        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com
+        ```
+    * Connect to **mongo-primary**
+        ```bash
+        chmod 400 cmpe281-us-west-1.pem
+        ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.67
+        ```
 
-    <!--
-        * Upload key to **jumpbox**
-            ```bash
-            scp -i cmpe281-us-west-1.pem cmpe281-us-west-1.pem ec2-user@ec2-18-144-42-185.us-west-1.compute.amazonaws.com:
-            ```
-        * Connect to **jumpbox**
-            ```bash
-            chmod 400 cmpe281-us-west-1.pem
-            ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-54-193-34-163.us-west-1.compute.amazonaws.com
-            ```
-        * Connect to **mongo-primary**
-            ```bash
-            chmod 400 cmpe281-us-west-1.pem
-            ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.115
-            ```
-    -->
 1. Install MongoDB
 
-    <!--
-    **Note:** *Start the NAT-gateway instance of the VPC with Elastic IP in order to provide internet access to private subnet instances.*
-    -->
+    ***Note:*** *Start the NAT-gateway instance of the VPC with Elastic IP in order to provide internet access to private subnet instances.*
+    
     1. Import the MongoDB repository
 
         * Import the public key used by the package management system.
@@ -203,8 +195,8 @@ Select one CP and one AP NoSQL database.
     * Instance Type: t2.micro
     * Number of Instances: 5
     * Network: CMPE281
-    * Subnet: Public Subnet
-    * Auto-assign Public IP: Enable
+    * Subnet: Private Subnet
+    * Auto-assign Public IP: Disable
     * Security Group: mongo
         * Ports: 22,27017
     * Key: cmpe281-us-west-2.pem
@@ -214,32 +206,30 @@ Select one CP and one AP NoSQL database.
 
     |Instance|IP|SSH|
     |--------|--|---|
-    |mongo-primary|54.183.146.72|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-1|13.56.59.10|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-2|18.144.45.78|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-3|18.144.34.186|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-4|54.219.185.196|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-5|54.183.174.6|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-174-6.us-west-1.compute.amazonaws.com|
+    |mongo-primary|10.0.1.67|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-1|10.0.1.141|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-2|10.0.1.83|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-3|10.0.1.46|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-4|10.0.1.69|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
 
-    <!--
-        1. Changing the hostname of **jumpbox** for better understanding
-            * Update the /etc/sysconfig/network file
-                ```bash
-                sudo vim /etc/sysconfig/network
-                    HOSTNAME=jumpbox
-                    NETWORKING=yes
-                ```
-            * Update the /etc/hosts file
-                ```bash
-                sudo vim /etc/hosts        
-                    127.0.0.1 jumpbox.localdomain jumpbox localhost localhost.localdomain
-                ```
-            * Reboot instance
-                ```bash
-                sudo reboot
-                ```
-            **Reference**: <https://aws.amazon.com/premiumsupport/knowledge-center/linux-static-hostname-rhel-centos-amazon/>
-    -->
+    
+1. Changing the hostname of **jumpbox** for better understanding
+    * Update the /etc/sysconfig/network file
+        ```bash
+        sudo vim /etc/sysconfig/network
+            HOSTNAME=jumpbox
+            NETWORKING=yes
+        ```
+    * Update the /etc/hosts file
+        ```bash
+        sudo vim /etc/hosts        
+            127.0.0.1 jumpbox.localdomain jumpbox localhost localhost.localdomain
+        ```
+    * Reboot instance
+        ```bash
+        sudo reboot
+        ```
+    ***Reference:** <https://aws.amazon.com/premiumsupport/knowledge-center/linux-static-hostname-rhel-centos-amazon/>*
 
 1. Prepare Instances for Replica Set
 
@@ -249,27 +239,16 @@ Select one CP and one AP NoSQL database.
         ```
 
     * Add IPs of EC2 Instances
-        <!--
-            ```bash
-            10.0.1.115  primary
-            10.0.1.226  secondary1
-            10.0.1.153  secondary2
-            10.0.1.61   secondary3
-            10.0.1.163  secondary4
-            10.0.1.160  secondary5
-            ```
-        -->
 
         ```bash
-        54.183.146.72  	primary
-        13.56.59.10 	secondary1
-        18.144.45.78	secondary2
-        18.144.34.186	secondary3
-        54.219.185.196	secondary4
-        54.183.174.6	secondary5
+        10.0.1.67  	primary
+        10.0.1.141 	secondary1
+        10.0.1.83	secondary2
+        10.0.1.46	secondary3
+        10.0.1.69	secondary4
         ```
 
-    **Note:** *Do it for each instance*
+    ***Note:** Do it for each instance*
 
     * Making sure the hostnames are changed
 
@@ -307,3 +286,100 @@ Select one CP and one AP NoSQL database.
     <!--
     **Challenge** : Instances are not connecting to each other.
     -->
+
+1. Create Admin Account
+
+    * 
+
+
+### Cassandra
+
+#### **Progress**
+
+* [ ] Create Cassandra Cluster
+* [ ] Test CP Properties
+* [ ] Test Cassandra Extras
+* [ ] Create Shards
+
+#### Create Cassandra Cluster
+
+1. Launch EC2 Instance
+
+    * AMI: Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type
+    * Instance Type: t2.micro
+    * Network: CMPE281
+    * Subnet: Private Subnet
+    * Auto-assign Public IP: Disable
+    * Tag: **cassandra-1**
+    * Security Group: cassandra
+      * Ports: 22, 80, 9042
+    * Keypair: cmpe281-us-west-1.pem
+
+1. Connecting to **cassandra-1**
+
+    * Connect to **jumpbox**
+        ```bash
+        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com
+        ```
+
+    * Connect to **cassandra-1**
+        ```bash
+        ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.82
+        ```
+
+1. Install Java JVM
+
+    * Add Personal Package Archives
+        ```bash
+        sudo add-apt-repository ppa:webupd8team/java
+        ```
+    * Update the package database
+        ```bash
+        sudo apt-get update
+        ```
+    * Install the Oracle JRE
+        ```bash
+        sudo apt-get install oracle-java8-set-default
+        ```
+    * Verify
+        ```bash
+        java -version
+        ```
+
+1. Install Cassandra
+
+    * Add the Cassandra Repository
+        ```bash
+        echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+        ```
+    * Add the Cassandra Repository Keys
+        ```bash
+        curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -
+        ```
+    * Update the package index
+        ```bash
+        sudo apt-get update
+        ```
+    * Install Apache Cassandra
+        ```bash
+        sudo apt-get install cassandra
+        ```
+    * Check the Status of the Apache Cassandra Service
+        ```bash
+        sudo systemctl status cassandra.service
+        ```
+    * Start the Apache Cassandra Service
+        ```bash
+        sudo systemctl start cassandra.service
+        ```
+    * Stop the Apache Cassandra Service
+        ```bash
+        sudo systemctl stop cassandra.service
+        ```
+    * Enable Apache Cassandra Service on System Boot
+        ```bash
+        sudo systemctl enable cassandra.service
+        ```
+    ***Reference:** <https://www.rosehosting.com/blog/how-to-install-apache-cassandra-on-ubuntu-16-04/>*
+
+1. 
