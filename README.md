@@ -22,16 +22,19 @@ Select one CP and one AP NoSQL database.
 
 ---
 
-## Journal
+## **Journal**
+
+---
 
 ### **MongoDB**
 
-#### **Progress**
+#### **Mongo Progress**
 
 * [x] Create MongoDB Cluster
+* [x] Test MongoDB Cluster
 * [ ] Test CP Properties
-* [ ] Test MongoDB Extras
-* [ ] Create Shards
+* [ ] Create MongoDB Shards
+* [ ] Create GO API
 
 #### Create MongoDB Cluster
 
@@ -81,7 +84,7 @@ Select one CP and one AP NoSQL database.
 1. Install MongoDB
 
     ***Note:*** *Start the NAT-gateway instance of the VPC with Elastic IP in order to provide internet access to private subnet instances.*
-    
+
     1. Import the MongoDB repository
 
         * Import the public key used by the package management system.
@@ -206,13 +209,12 @@ Select one CP and one AP NoSQL database.
 
     |Instance|IP|SSH|
     |--------|--|---|
-    |mongo-primary|10.0.1.67|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-1|10.0.1.141|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-2|10.0.1.83|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-3|10.0.1.46|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-4|10.0.1.69|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
+    |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-3|10.0.1.107|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-4|10.0.1.211|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
 
-    
 1. Changing the hostname of **jumpbox** for better understanding
     * Update the /etc/sysconfig/network file
         ```bash
@@ -222,8 +224,8 @@ Select one CP and one AP NoSQL database.
         ```
     * Update the /etc/hosts file
         ```bash
-        sudo vim /etc/hosts        
-            127.0.0.1 jumpbox.localdomain jumpbox localhost localhost.localdomain
+        sudo vim /etc/hosts
+        127.0.0.1 jumpbox.localdomain jumpbox localhost localhost.localdomain
         ```
     * Reboot instance
         ```bash
@@ -241,11 +243,11 @@ Select one CP and one AP NoSQL database.
     * Add IPs of EC2 Instances
 
         ```bash
-        10.0.1.67  	primary
-        10.0.1.141 	secondary1
-        10.0.1.83	secondary2
-        10.0.1.46	secondary3
-        10.0.1.69	secondary4
+        10.0.1.115  primary
+        10.0.1.165  secondary1
+        10.0.1.175  secondary2
+        10.0.1.107  secondary3
+        10.0.1.211  secondary4
         ```
 
     ***Note:** Do it for each instance*
@@ -283,18 +285,63 @@ Select one CP and one AP NoSQL database.
             ]
         })
         ```
-    <!--
-    **Challenge** : Instances are not connecting to each other.
-    -->
+    **Challenge** : Faced some issues connecting to instances in private network.
 
 1. Create Admin Account
 
-    * 
+    * Open mongo-cli in primary instance
+        ```bash
+        mongo
+        ```
+    * Use admin database
+        ```bash
+        use admin
+        ```
+    * Create admin account
+        ```bash
+        db.createUser( {
+            user: "admin",
+            pwd: "cmpe281",
+            roles: [{ role: "root", db: "admin" }]
+        });
+        ```
+    * From now on, in order to access the mongo-cli use this admin credentials
+        ```bash
+        mongo -u admin -p cmpe281 --authenticationDatabase admin
+        ```
 
+    ***NOTE:** The cluster will choose its new primary when the existing primary instance is down.*
 
-### Cassandra
+1. Test cluster by adding test data into master.
 
-#### **Progress**
+    * Add test document into primary
+        ```bash
+        db.test.save( { a : 1 } )
+        ```
+    * Find this test document
+        ```bash
+        db.test.find()
+        ```
+    * Update test document
+        ```bash
+        db.test.replaceOne( { a : 1 }, { a : 2 } )
+        ```
+    All this commands will run properly from the primary node of the cluster.
+
+    * In order to allow queries from secondary, set **Slave OK**
+        ```bash
+        db.getMongo().setSlaveOk()
+        ```
+    * Now try finding this document from secondary nodes
+        ```bash
+        db.test.find()
+        ```
+
+---
+
+### **Cassandra**
+
+#### **Cassandra Progress**
 
 * [ ] Create Cassandra Cluster
 * [ ] Test CP Properties
