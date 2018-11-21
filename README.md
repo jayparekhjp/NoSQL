@@ -341,92 +341,183 @@ Select one CP and one AP NoSQL database.
 
 ### **Cassandra**
 
-#### **Cassandra Progress**
-
-* [ ] Create Cassandra Cluster
+* [x] Create Kubernetes Cluster on AWS
+* [ ] Install Cassandra on Kubernetes Cluster
 * [ ] Test CP Properties
-* [ ] Test Cassandra Extras
-* [ ] Create Shards
 
-#### Create Cassandra Cluster
+<!--
+    #### **Cassandra Progress**
 
-1. Launch EC2 Instance
+    * [ ] Create Cassandra Cluster
+    * [ ] Test CP Properties
+    * [ ] Test Cassandra Extras
+    * [ ] Create Shards
 
-    * AMI: Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type
-    * Instance Type: t2.micro
-    * Network: CMPE281
-    * Subnet: Private Subnet
-    * Auto-assign Public IP: Disable
-    * Tag: **cassandra-1**
-    * Security Group: cassandra
-      * Ports: 22, 80, 9042
-    * Keypair: cmpe281-us-west-1.pem
+    #### Create Cassandra Cluster
 
-1. Connecting to **cassandra-1**
+    1. Launch EC2 Instance
 
-    * Connect to **jumpbox**
-        ```bash
-        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com
-        ```
+        * AMI: Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type
+        * Instance Type: t2.micro
+        * Network: CMPE281
+        * Subnet: Private Subnet
+        * Auto-assign Public IP: Disable
+        * Tag: **cassandra-1**
+        * Security Group: cassandra
+        * Ports: 22, 80, 9042
+        * Keypair: cmpe281-us-west-1.pem
 
-    * Connect to **cassandra-1**
-        ```bash
-        ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.82
-        ```
+    1. Connecting to **cassandra-1**
 
-1. Install Java JVM
+        * Connect to **jumpbox**
+            ```bash
+            ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com
+            ```
 
-    * Add Personal Package Archives
-        ```bash
-        sudo add-apt-repository ppa:webupd8team/java
-        ```
-    * Update the package database
-        ```bash
-        sudo apt-get update
-        ```
-    * Install the Oracle JRE
-        ```bash
-        sudo apt-get install oracle-java8-set-default
-        ```
-    * Verify
-        ```bash
-        java -version
-        ```
+        * Connect to **cassandra-1**
+            ```bash
+            ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.82
+            ```
 
-1. Install Cassandra
+    1. Install Java JVM
 
-    * Add the Cassandra Repository
-        ```bash
-        echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
-        ```
-    * Add the Cassandra Repository Keys
-        ```bash
-        curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -
-        ```
-    * Update the package index
-        ```bash
-        sudo apt-get update
-        ```
-    * Install Apache Cassandra
-        ```bash
-        sudo apt-get install cassandra
-        ```
-    * Check the Status of the Apache Cassandra Service
-        ```bash
-        sudo systemctl status cassandra.service
-        ```
-    * Start the Apache Cassandra Service
-        ```bash
-        sudo systemctl start cassandra.service
-        ```
-    * Stop the Apache Cassandra Service
-        ```bash
-        sudo systemctl stop cassandra.service
-        ```
-    * Enable Apache Cassandra Service on System Boot
-        ```bash
-        sudo systemctl enable cassandra.service
-        ```
-    ***Reference:** <https://www.rosehosting.com/blog/how-to-install-apache-cassandra-on-ubuntu-16-04/>*
+        * Add Personal Package Archives
+            ```bash
+            sudo add-apt-repository ppa:webupd8team/java
+            ```
+        * Update the package database
+            ```bash
+            sudo apt-get update
+            ```
+        * Install the Oracle JRE
+            ```bash
+            sudo apt-get install oracle-java8-set-default
+            ```
+        * Verify
+            ```bash
+            java -version
+            ```
 
-1. 
+    1. Install Cassandra
+
+        * Add the Cassandra Repository
+            ```bash
+            echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+            ```
+        * Add the Cassandra Repository Keys
+            ```bash
+            curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -
+            ```
+        * Update the package index
+            ```bash
+            sudo apt-get update
+            ```
+        * Install Apache Cassandra
+            ```bash
+            sudo apt-get install cassandra
+            ```
+        * Check the Status of the Apache Cassandra Service
+            ```bash
+            sudo systemctl status cassandra.service
+            ```
+        * Start the Apache Cassandra Service
+            ```bash
+            sudo systemctl start cassandra.service
+            ```
+        * Stop the Apache Cassandra Service
+            ```bash
+            sudo systemctl stop cassandra.service
+            ```
+        * Enable Apache Cassandra Service on System Boot
+            ```bash
+            sudo systemctl enable cassandra.service
+            ```
+        ***Reference:** <https://www.rosehosting.com/blog/how-to-install-apache-cassandra-on-ubuntu-16-04/>*
+-->
+
+#### Kubernetes Setup Local
+
+***Note:** Trying to deploy cassandra on AWS EKS.*
+
+1. Install **kops**
+
+    *Used to setup infrastructure in AWS*
+    ```bash
+    curl -LO https://github.com/kubernetes/kops/releases/download/1.8.1/kops-linux-amd64 
+
+    sudo mv kops-linux-amd64 /usr/local/bin/kops && sudo chmod a+x /usr/local/bin/kops
+    ```
+
+1. Install **kubectl**
+
+    *To interact with Kubernetes cluster in AWS*
+    ```bash
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.7.16/bin/linux/amd64/kubectl
+
+    sudo mv kubectl /usr/local/bin/kubectl && sudo chmod a+x /usr/local/bin/kubectl
+    ```
+
+1. Install **awscli**
+
+    ***kops** uses awscli to interact with AWS*
+    ```bash
+    sudo apt-get install awscli
+    ```
+
+1. Create an IAM user
+    ```text
+    User name: jpCassandra
+    Access type: Programmatic Access, AWS Management Console access
+    Attach existing policies directly: AmazonEC2FullAccess, AmazonRoute53FullAccess, AmazonS3FullAccess, IAMFullAccess, AmazonVPCFullAccess
+    ```
+
+1. Configure AWS from terminal
+    ```bash
+    aws configure
+    ```
+
+1. Create S3 Bucket
+    ```bash
+    aws s3api create-bucket --bucket jp-kops-cassandra --region eu-west-1 --create-bucket-configuration LocationConstraint=eu-west-1
+    ```
+
+1. Generate a Public/Private key-pair
+
+    *This key-pair will be used to access the EC2 instances*
+    ```bash
+    ssh-keygen -f jp-kops-cassandra
+    ```
+
+1. Cluster Definition
+    ```bash
+    kops create cluster \
+    --cloud=aws \
+    --name=jp-kops-cassandra.k8s.local \
+    --zones=eu-west-1a,eu-west-1b,eu-west-1c \
+    --master-size="t2.micro" \
+    --master-zones=eu-west-1a,eu-west-1b,eu-west-1c \
+    --node-size="t2.micro" \
+    --ssh-public-key="jp-kops-cassandra.pub" \
+    --state=s3://jp-kops-cassandra \
+    --node-count=6
+    ```
+
+1. Apply the cluster definition
+    ```bash
+    kops update cluster --name=jp-kops-cassandra.k8s.local --state=s3://jp-kops-cassandra --yes
+    ```
+
+1. Check the Kubernetes master nodes
+    ```bash
+    kubectl get no -L failure-domain.beta.kubernetes.io/zone -l kubernetes.io/role=master
+    ```
+
+1. Check the Kubernetes nodes
+    ```bash
+    kubectl get no -L failure-domain.beta.kubernetes.io/zone -l kubernetes.io/role=node
+    ```
+
+1. Destroy the environment
+    ```bash
+    kops delete cluster --name=jp-kops-cassandra.k8s.local --state=s3://jp-kops-cassandra --yes
+    ```
