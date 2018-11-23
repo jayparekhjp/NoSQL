@@ -32,9 +32,9 @@ Select one CP and one AP NoSQL database.
 
 * [x] Create MongoDB Cluster
 * [x] Test MongoDB Cluster
-* [ ] Test CP Properties
 * [ ] Create MongoDB Shards
 * [ ] Create GO API
+* [ ] Create Video
 
 #### Create MongoDB Cluster
 
@@ -312,38 +312,41 @@ Select one CP and one AP NoSQL database.
 
     ***NOTE:** The cluster will choose its new primary when the existing primary instance is down.*
 
-1. Test cluster by adding test data into master.
+#### Test MongoDB Cluster
 
-    * Add test document into primary
-        ```bash
-        db.test.save( { a : 1 } )
-        ```
-    * Find this test document
-        ```bash
-        db.test.find()
-        ```
-    * Update test document
-        ```bash
-        db.test.replaceOne( { a : 1 }, { a : 2 } )
-        ```
+1. Add test document into primary
+    ```bash
+    db.test.save( { a : 1 } )
+    ```
+1. Find this test document
+    ```bash
+    db.test.find()
+    ```
+1. Update test document
+    ```bash
+    db.test.replaceOne( { a : 1 }, { a : 2 } )
+    ```
     All this commands will run properly from the primary node of the cluster.
 
-    * In order to allow queries from secondary, set **Slave OK**
-        ```bash
-        db.getMongo().setSlaveOk()
-        ```
-    * Now try finding this document from secondary nodes
-        ```bash
-        db.test.find()
-        ```
+1. In order to allow queries from secondary, set **Slave OK**
+    ```bash
+    db.getMongo().setSlaveOk()
+    ```
+1. Now try finding this document from secondary nodes
+    ```bash
+    db.test.find()
+    ```
 
 ---
 
 ### **Cassandra**
 
+***Note:** Trying to deploy cassandra on AWS EKS.*
+
 * [x] Create Kubernetes Cluster on AWS
 * [ ] Install Cassandra on Kubernetes Cluster
-* [ ] Test CP Properties
+* [ ] Test Cassandra Cluster
+* [ ] Create Video
 
 <!--
     #### **Cassandra Progress**
@@ -435,11 +438,9 @@ Select one CP and one AP NoSQL database.
         ***Reference:** <https://www.rosehosting.com/blog/how-to-install-apache-cassandra-on-ubuntu-16-04/>*
 -->
 
-#### Kubernetes Setup Local
+#### Kubernetes Cluster Setup
 
-***Note:** Trying to deploy cassandra on AWS EKS.*
-
-1. Install **kops**
+1. Install **kops** in local
 
     *Used to setup infrastructure in AWS*
     ```bash
@@ -448,7 +449,7 @@ Select one CP and one AP NoSQL database.
     sudo mv kops-linux-amd64 /usr/local/bin/kops && sudo chmod a+x /usr/local/bin/kops
     ```
 
-1. Install **kubectl**
+1. Install **kubectl** in local
 
     *To interact with Kubernetes cluster in AWS*
     ```bash
@@ -478,33 +479,33 @@ Select one CP and one AP NoSQL database.
 
 1. Create S3 Bucket
     ```bash
-    aws s3api create-bucket --bucket jp-kops-cassandra --region eu-west-1 --create-bucket-configuration LocationConstraint=eu-west-1
+    aws s3api create-bucket --bucket jp-cassandra-eks --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
     ```
 
 1. Generate a Public/Private key-pair
 
     *This key-pair will be used to access the EC2 instances*
     ```bash
-    ssh-keygen -f jp-kops-cassandra
+    ssh-keygen -f jp-cassandra-eks
     ```
 
 1. Cluster Definition
     ```bash
     kops create cluster \
     --cloud=aws \
-    --name=jp-kops-cassandra.k8s.local \
-    --zones=eu-west-1a,eu-west-1b,eu-west-1c \
+    --name=jp-cassandra-eks.k8s.local \
+    --zones=us-west-2a,us-west-2b,us-west-2c \
     --master-size="t2.micro" \
-    --master-zones=eu-west-1a,eu-west-1b,eu-west-1c \
+    --master-zones=us-west-2a,us-west-2b,us-west-2c \
     --node-size="t2.micro" \
-    --ssh-public-key="jp-kops-cassandra.pub" \
-    --state=s3://jp-kops-cassandra \
+    --ssh-public-key="jp-cassandra-eks.pub" \
+    --state=s3://jp-cassandra-eks \
     --node-count=6
     ```
 
 1. Apply the cluster definition
     ```bash
-    kops update cluster --name=jp-kops-cassandra.k8s.local --state=s3://jp-kops-cassandra --yes
+    kops update cluster --name=jp-cassandra-eks.k8s.local --state=s3://jp-cassandra-eks --yes
     ```
 
 1. Check the Kubernetes master nodes
@@ -519,5 +520,100 @@ Select one CP and one AP NoSQL database.
 
 1. Destroy the environment
     ```bash
-    kops delete cluster --name=jp-kops-cassandra.k8s.local --state=s3://jp-kops-cassandra --yes
+    kops delete cluster --name=jp-cassandra-eks.k8s.local --state=s3://jp-cassandra-eks --yes
     ```
+
+#### Install Cassandra on Cluster
+
+1. Create a **cassandra.yml** file
+    ```bash
+    apiVersion: v1
+    kind: Service
+    metadata:
+    name: cassandra
+    spec:
+    clusterIP: None
+    ports:
+        - name: cql
+        port: 9042
+    selector:
+        app: cassandra
+    ---
+    apiVersion: "apps/v1beta1"
+    kind: StatefulSet
+    metadata:
+    name: cassandra
+    spec:
+    serviceName: cassandra
+    replicas: 6
+    template:
+        metadata:
+        labels:
+            app: cassandra
+        spec:
+        affinity:
+            podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+                labelSelector:
+                matchLabels:
+                    app: cassandra
+        containers:
+            - env:
+                - name: MAX_HEAP_SIZE
+                value: 512M
+                - name: HEAP_NEWSIZE
+                value: 512M
+                - name: POD_IP
+                valueFrom:
+                    fieldRef:
+                    fieldPath: status.podIP
+            image: merapar/cassandra:2.3
+            name: cassandra
+            volumeMounts:
+                - mountPath: /cassandra-storage
+                name: cassandra-storage
+    volumeClaimTemplates:
+    - metadata:
+        name: cassandra-storage
+        spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+            requests:
+            storage: 10Gi
+    ```
+
+1. Run this **cassandra.yml** file
+    ```bash
+    kubectl create -f cassandra.yml
+    ```
+
+#### Test Cassandra Cluster 
+
+1. Interact with cassandra cluster
+    ```bash
+    kubectl exec -ti cassandra-0 cqlsh cassandra-0
+    ```
+
+1. Create keyspace
+    ```bash
+    CREATE KEYSPACE cmpe281 WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'us-west' : 3 };
+    ```
+
+1. Switch to keyspace
+    ```bash
+    USE cmpe281;
+    ```
+
+1. Create a table
+    ```bash
+    CREATE TABLE test (id uuid, PRIMARY KEY (id));
+    ```
+
+1. Insert values into table
+    ```bash
+    INSERT INTO test (id) VALUES (uuid());
+    ```
+
+**CHALLENGE:** Getting Error "NoHostAvailable:"
