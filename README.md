@@ -209,11 +209,11 @@ Select one CP and one AP NoSQL database.
 
     |Instance|IP|SSH|
     |--------|--|---|
-    |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" root@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-3|10.0.1.107|ssh -i "cmpe281-us-west-1.pem" root@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-4|10.0.1.211|ssh -i "cmpe281-us-west-1.pem" root@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
+    |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-3|10.0.1.107|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
+    |mongo-secondary-4|10.0.1.211|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
 
 1. Changing the hostname of **jumpbox** for better understanding
     * Update the /etc/sysconfig/network file
@@ -617,3 +617,77 @@ Select one CP and one AP NoSQL database.
     ```
 
 **CHALLENGE:** Getting Error "NoHostAvailable:"
+
+---
+
+### **Riak**
+
+#### Step 1: Create Riak Cluster
+
+1. Launch Instances
+    
+    * AMI: Riak KV 2.2 Series
+    * Instance Type: t2.micro
+    * Number of instances: 5
+    * Network: CMPE281
+    * Subnet: Private
+    * Auto-assign IP: Disable
+    * Security Group: Riak
+        * Ports: 22, 8087, 8098
+    * Keypair: cmpe281-us-west-1.pem
+
+1. Open Additional Security Ports for Cluster
+
+    * Ports :4369, 6000-7999, 8099, 9080
+    * Source: sg-0c51891648571d2c7
+
+1. Riak Instances Information
+
+    |Instance|Private IP|SSH|
+    |-|-|-|
+    |riak1|10.0.1.119|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.119|
+    |riak2|10.0.1.14|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.14|
+    |riak3|10.0.1.25|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.25|
+    |riak4|10.0.1.160|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.160|
+    |riak5|10.0.1.231|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.231|
+
+    ***Note:** I have given instances names riak1, riak2, riak3, riak4, riak 5 for better understanding.*
+
+1.  SSH into Riak instances
+
+    * SSH into **jumpbox**
+        ```bash
+        chmod 400 cmpe281-us-west-1.pem
+
+        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-161-186.us-west-1.compute.amazonaws.com
+        ```
+    * SSH into **riak1**
+        ```bash
+        ssh -i "cmpe281-us-west-1.pem" ec2-user@<Private IP of RIAK Instance>
+        ```
+
+1. Connect every instances to **riak1** by executing this command from every other instance
+
+    ```bash
+    sudo riak-admin cluster join riak@10.0.1.119		
+    ```
+
+1. Plan riak cluster
+    ```bash
+    sudo riak-admin cluster plan
+    ```
+
+1. Check the cluster planning status
+    ```bash
+    sudo riak-admin cluster status
+    ```
+
+1. Commit changes of Riak cluster
+    ```bash
+    sudo riak-admin cluster commit
+    ```
+
+1. Check the cluster status
+    ```bash
+    sudo riak-admin member_status
+    ```
