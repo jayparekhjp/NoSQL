@@ -691,3 +691,22 @@ Select one CP and one AP NoSQL database.
     ```bash
     sudo riak-admin member_status
     ```
+
+#### Testing Riak Cluster
+
+1. Create Bucker
+    ```curl
+    curl -i http://10.0.1.14:8098/buckets?buckets=true    
+    ```
+
+1. Write Data
+    ```curl
+    curl -v -XPUT -d '{"jay":"parekh"}' \
+    http://10.0.1.14:8098/buckets/bucket/keys/key1?returnbody=true
+    ```
+
+1. Read Data
+    ```curl
+    curl -i http://10.0.1.25:8098/buckets/bucket/keys/key1
+    ```
+    Here, we can read data from any node of the cluster since data is replicated in each node.
