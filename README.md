@@ -653,15 +653,15 @@ Select one CP and one AP NoSQL database.
 
     |Instance|Private IP|SSH|
     |-|-|-|
-    |riak1|10.0.1.119|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.119|
-    |riak2|10.0.1.14|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.14|
-    |riak3|10.0.1.25|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.25|
-    |riak4|10.0.1.160|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.160|
-    |riak5|10.0.1.231|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.231|
+    |riak1|10.0.1.236|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.236|
+    |riak2|10.0.1.254|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.254|
+    |riak3|10.0.1.233|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.233|
+    |riak4|10.0.1.251|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.251|
+    |riak5|10.0.1.159|ssh -i "cmpe281-us-west-1.pem" ec2-user@10.0.1.159|
 
     ***Note:** I have given instances names riak1, riak2, riak3, riak4, riak 5 for better understanding.*
 
-1.  SSH into Riak instances
+1. SSH into Riak instances
 
     * SSH into **jumpbox**
         ```bash
@@ -674,10 +674,16 @@ Select one CP and one AP NoSQL database.
         ssh -i "cmpe281-us-west-1.pem" ec2-user@<Private IP of RIAK Instance>
         ```
 
+1. Enable ports for cluster
+    * Edit **/etc/riak/riak.conf**
+        ```bash
+        sudo vi /etc/riak/riak.conf
+        ```
+
 1. Connect every instances to **riak1** by executing this command from every other instance
 
     ```bash
-    sudo riak-admin cluster join riak@10.0.1.119		
+    sudo riak-admin cluster join riak@10.0.1.236
     ```
 
 1. Plan riak cluster
@@ -704,17 +710,17 @@ Select one CP and one AP NoSQL database.
 
 1. Create Bucker
     ```curl
-    curl -i http://10.0.1.14:8098/buckets?buckets=true    
+    curl -i http://10.0.1.236:8098/buckets?buckets=true
     ```
 
 1. Write Data
     ```curl
     curl -v -XPUT -d '{"jay":"parekh"}' \
-    http://10.0.1.14:8098/buckets/bucket/keys/key1?returnbody=true
+    http://10.0.1.236:8098/buckets/bucket/keys/key1?returnbody=true
     ```
 
 1. Read Data
     ```curl
-    curl -i http://10.0.1.25:8098/buckets/bucket/keys/key1
+    curl -i http://10.0.1.254:8098/buckets/bucket/keys/key1
     ```
     Here, we can read data from any node of the cluster since data is replicated in each node.
