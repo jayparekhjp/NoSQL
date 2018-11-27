@@ -630,7 +630,7 @@ Select one CP and one AP NoSQL database.
 
 ***Reference:**<https://github.com/paulnguyen/cmpe281/blob/master/labs/lab4/aws-riak-database-cluster.md>*
 
-#### Step 1: Create Riak Cluster
+#### Create Riak Cluster
 
 1. Launch Instances
     
