@@ -217,7 +217,7 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
 
     |Instance|IP|SSH|
     |--------|--|---|
-    |jumpbox|13.56.161.186|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com|
+    |jumpbox|13.56.161.186|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-161-186.us-west-1.compute.amazonaws.com|
     |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.115|
     |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.165|
     |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.175|
@@ -627,6 +627,8 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
 
 **CHALLENGE:** Getting Error "NoHostAvailable:"
 
+**Decided to shift to Riak and work on EKS in parallel to resolve the problem.**
+
 ---
 
 ### **Riak**
@@ -739,3 +741,5 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
 To analyse the CAP theorerm for MongoDB and Riak, we have to create a partition in the cluster and the cluster will behave in either CP or AP manner.
 
 * To create a partition, we can stop the communication between two nodes of the cluster.
+    ```bash
+
