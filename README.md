@@ -20,29 +20,33 @@ Select one CP and one AP NoSQL database.
 
 4. What happens to the system during partition recovery?
 
----
-
 ## **Journal**
-
----
 
 ### **MongoDB**
 
-#### **Mongo Progress**
+#### **General Flow for MongoDB:**
+
+* Launch Linux EC2 instances.
+* Install MongoDB on instances
+* Connect them and initiate a replicaset.
+* Create a partition and analyze the CAP properties.
+
+#### **MongoDB Progress**
 
 * [x] Create MongoDB Cluster
 * [x] Test MongoDB Cluster
 * [ ] Create MongoDB Shards
-* [ ] Create GO API
+* [x] Create GO API
 * [ ] Create Video
 
 #### Create MongoDB Cluster
+
+Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Total of 5 EC2 instances will be used and each instance will work as a node of the cluster.
 
 ***Reference**: <https://github.com/paulnguyen/cmpe281/blob/master/labs/lab4/aws-mongodb-replica-set.md>*
 
 1. Create Jumpbox
 
-    **Note:** *Since all the instances will be in private subnet, jumpbox is needed to access them*
     * AMI: Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type
     * Instance Type: t2.micro
     * Network: CMPE281
@@ -53,7 +57,9 @@ Select one CP and one AP NoSQL database.
       * Ports: 22, 80
     * Keypair: cmpe281-us-west-1.pem
 
-1. Creating an EC2 Instance
+    **Note:** Since all the instances will be in private subnet, jumpbox is needed to access them.
+
+1. Creating an EC2 instance for mongo
     * AMI: Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
     * Instance Type: t2.micro
     * Network: CMPE281
@@ -64,6 +70,8 @@ Select one CP and one AP NoSQL database.
       * Ports: 22, 27017
     * Keypair: cmpe281-us-west-1.pem
 
+    **Note:** MongoDB works on port 27017, we'll be communication this instance through port 27017.
+
 1. Connecting to **mongo-primary**
 
     * Upload key to **jumpbox**
@@ -73,7 +81,7 @@ Select one CP and one AP NoSQL database.
     * Connect to **jumpbox**
         ```bash
         chmod 400 cmpe281-us-west-1.pem
-        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com
+        ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-161-186.us-west-1.compute.amazonaws.com
         ```
     * Connect to **mongo-primary**
         ```bash
@@ -83,7 +91,7 @@ Select one CP and one AP NoSQL database.
 
 1. Install MongoDB
 
-    ***Note:*** *Start the NAT-gateway instance of the VPC with Elastic IP in order to provide internet access to private subnet instances.*
+    **Note:** Start the NAT-gateway instance of the VPC with Elastic IP in order to provide internet access to private subnet instances.
 
     1. Import the MongoDB repository
 
@@ -209,11 +217,12 @@ Select one CP and one AP NoSQL database.
 
     |Instance|IP|SSH|
     |--------|--|---|
-    |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-54-183-146-72.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-59-10.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-18-144-45-78.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-3|10.0.1.107|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-18-144-34-186.us-west-1.compute.amazonaws.com|
-    |mongo-secondary-4|10.0.1.211|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-54-219-185-196.us-west-1.compute.amazonaws.com|
+    |jumpbox|13.56.161.186|ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-user@ec2-13-56-16-49.us-west-1.compute.amazonaws.com|
+    |mongo-primary|10.0.1.115|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.115|
+    |mongo-secondary-1|10.0.1.165|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.165|
+    |mongo-secondary-2|10.0.1.175|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.175|
+    |mongo-secondary-3|10.0.1.107|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.107|
+    |mongo-secondary-4|10.0.1.211|ssh -i "cmpe281-us-west-1.pem" ubuntu@10.0.1.211|
 
 1. Changing the hostname of **jumpbox** for better understanding
     * Update the /etc/sysconfig/network file
@@ -305,10 +314,10 @@ Select one CP and one AP NoSQL database.
             roles: [{ role: "root", db: "admin" }]
         });
         ```
-    * From now on, in order to access the mongo-cli use this admin credentials
-        ```bash
-        mongo -u admin -p cmpe281 --authenticationDatabase admin
-        ```
+1. Open MongoDB cli in instances. From now on, in order to access the mongo-cli use this admin credentials
+    ```bash
+    mongo -u admin -p cmpe281 --authenticationDatabase admin
+    ```
 
     ***NOTE:** The cluster will choose its new primary when the existing primary instance is down.*
 
@@ -633,7 +642,7 @@ Select one CP and one AP NoSQL database.
 #### Create Riak Cluster
 
 1. Launch Instances
-    
+
     * AMI: Riak KV 2.2 Series
     * Instance Type: t2.micro
     * Number of instances: 5
@@ -724,3 +733,9 @@ Select one CP and one AP NoSQL database.
     curl -i http://10.0.1.254:8098/buckets/bucket/keys/key1
     ```
     Here, we can read data from any node of the cluster since data is replicated in each node.
+
+### Checking Partition Tolerence
+
+To analyse the CAP theorerm for MongoDB and Riak, we have to create a partition in the cluster and the cluster will behave in either CP or AP manner.
+
+* To create a partition, we can stop the communication between two nodes of the cluster.
