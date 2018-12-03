@@ -838,5 +838,14 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
 To analyse the CAP theorerm for MongoDB and Riak, we have to create a partition in the cluster and the cluster will behave in either CP or AP manner.
 
 * To create a partition, we can stop the communication between two nodes of the cluster.
+    
     ```bash
+    sudo iptables -I INPUT -s <IPADDRESS> -j DROP
+	```
+
+* To lift the partition, we can just re-establish communication again.
+
+	```bash
+	sudo iptables -D INPUT -s <IPADDRESS> -j DROP
+	```
 
