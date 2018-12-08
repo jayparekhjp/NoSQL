@@ -22,6 +22,10 @@ Select one CP and one AP NoSQL database.
 
 ## **Journal**
 
+### Submission Link
+
+<https://youtu.be/K5uUphP7mLs>
+
 ### **MongoDB**
 
 #### **General Flow for MongoDB:**
@@ -37,7 +41,7 @@ Select one CP and one AP NoSQL database.
 * [x] Test MongoDB Cluster
 * [ ] Create MongoDB Shards
 * [x] Create GO API
-* [ ] Create Video
+* [x] Create Video
 
 #### Create MongoDB Cluster
 
@@ -338,8 +342,7 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
                 { _id: 1, host: "secondary1:27017" },
                 { _id: 2, host: "secondary2:27017" },
                 { _id: 3, host: "secondary3:27017" },
-                { _id: 4, host: "secondary4:27017" },
-                { _id: 5, host: "secondary5:27017" }
+                { _id: 4, host: "secondary4:27017" }
             ]
         })
         ```
@@ -722,7 +725,7 @@ Here, we'll make a MongoDB cluster in AWS. Cluster size will be of 5 nodes. Tota
 
 * [x] Create Riak Cluster
 * [x] Test Riak Cluster
-* [ ] Create Video
+* [x] Create Video
 
 ***Reference:**<https://github.com/paulnguyen/cmpe281/blob/master/labs/lab4/aws-riak-database-cluster.md>*
 
@@ -973,3 +976,354 @@ To analyse the CAP theorerm for MongoDB and Riak, we have to create a partition 
     ```bash
     curl -i http://10.0.1.236:8098/buckets/bucket/keys/key10
     ```
+
+### MongoDB Sharding
+
+#### Step 1: Create Security Groups
+
+Name: mongodb-shard-internal
+|Port|Source|
+|-|-|
+|22|Anywhere|
+|27017|sg-0291055648f99c5f5|
+|27018|sg-0291055648f99c5f5|
+|27019|sg-0291055648f99c5f5|
+
+Name: mongodb-shard-internal
+|Port|Source|
+|-|-|
+|22|Anywhere|
+|27017|Anywhere|
+
+#### Step 2: Create Config replica-set
+
+1. Launch Instance
+    ```bash
+    AMI: Amazon Linux AMI 2018.03.0 (HVM)
+    Type: t2.micro
+    VPC: CMPE281
+    Subnet: Public Subnet
+    Auto-assign Public IP: Enable
+    Tags:
+        Key: Name
+        Tag: mongo-shard-config-1
+    Security Group: mongodb-shard-internal
+    ```
+
+1. SSH into instance
+    ```bash
+    chmod 400 cmpe281-us-west-1.pem
+    ssh -i "cmpe281-us-west-1.pem" ec2-user@ec2-13-56-210-79.us-west-1.compute.amazonaws.com
+    ```
+
+1. Install MongoDB
+
+    * Configure the package management system
+
+        * Create mongodb-org-4.0.repo file
+        ```bash
+        sudo nano /etc/yum.repos.d/mongodb-org-4.0.repo
+        ```
+
+        * Insert content into file
+        ```bash
+        [mongodb-org-4.0]
+        name=MongoDB Repository
+        baseurl=https://repo.mongodb.org/yum/amazon/2013.03/mongodb-org/4.0/x86_64/
+        gpgcheck=1
+        enabled=1
+        gpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc
+        ```
+
+        * Setting MongoDB to start at boot
+        ```bash
+        sudo chkconfig mongod on
+        ```
+
+1. Create Image
+
+    Name: mongo-shard
+
+1. Create another instance
+    ```bash
+    AMI: mongo-shard
+    Type: t2.micro
+    VPC: CMPE281
+    Subnet: Public Subnet
+    Auto-assign Public IP: Enable
+    Tags:
+        Key: Name
+        Tag: mongo-shard-config-1
+    Security Group: mongodb-shard-internal
+    ```
+
+1. Instances description
+
+    |Instance|IP|SSH|
+    |-|-|-|
+    |mongose|54.202.32.165|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-54-202-32-165.us-west-2.compute.amazonaws.com|
+    |shard-config-1|54.186.55.221|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-54-186-55-221.us-west-2.compute.amazonaws.com|
+    |shard-config-2|52.24.77.19|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-52-24-77-19.us-west-2.compute.amazonaws.com|
+    |shard-1.1|35.162.18.250|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-35-162-18-250.us-west-2.compute.amazonaws.com|
+    |shard-1.2|35.164.165.62|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-35-164-165-62.us-west-2.compute.amazonaws.com|
+    |shard-2.1|54.188.44.110|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-54-188-44-110.us-west-2.compute.amazonaws.com|
+    |shard-2.2|54.212.88.211|ssh -i "cmpe281-us-west-2.pem" ec2-user@ec2-54-212-88-211.us-west-2.compute.amazonaws.com|
+
+1. Changes in mongodb-shard-config instances
+
+    *  Make directory for data
+    ```bash
+    sudo mkdir -p /data/db
+    ```
+
+    * Give permission to mongod
+    ```bash
+    sudo chown -R mongod:mongod /data/db
+    ```
+
+    * Change mongod.conf
+
+        * Open file
+            ```bash
+            sudo vi /etc/mongod.conf
+            ```
+
+        * File changes
+            ```bash
+            storage:
+                dbpath: /data/db
+
+            net:
+                port: 27019
+                bindIp: 0.0.0.0
+
+            replication:
+                replSetName: crs
+
+            sharding:
+                clusterRole: configsvr
+            ```
+
+    * Start mongod daemon with new changes
+        ```bash
+        sudo mongod --config /etc/mongod.conf --logpath /var/log/mongodb/mongod.log
+        ```
+
+1. Change hostnames
+
+    * Open /etc/hosts
+
+        ```bash
+        sudo vi /etc/hosts
+        ```
+
+    * Add IPs of EC2 Instances
+
+        ```bash
+        54.186.55.221   config1
+        52.24.77.19     config2
+        ```
+
+1. mongo-shard-conf replicaset.
+    ```bash
+    mongo -port 27019
+    ```
+    ```bash
+    rs.initiate(
+        {
+            _id: "crs",
+            configsvr: true,
+            members: [
+                { _id : 0, host : "config1:27019"},
+                { _id : 1, host : "config2:27019"}
+            ]
+        }
+    )
+
+1. Changes in mongodb-shard-1 instances
+
+    *  Make directory for data
+    ```bash
+    sudo mkdir -p /data/db
+    ```
+
+    * Give permission to mongod
+    ```bash
+    sudo chown -R mongod:mongod /data/db
+    ```
+
+    * Change mongod.conf
+
+        * Open file
+            ```bash
+            sudo vi /etc/mongod.conf
+            ```
+
+        * File changes
+            ```bash
+            storage:
+                dbpath: /data/db
+
+            net:
+                port: 27018
+                bindIp: 0.0.0.0
+
+            replication:
+                replSetName: rs0
+
+            sharding:
+                clusterRole: shardsvr
+            ```
+
+    * Start mongod daemon with new changes
+        ```bash
+        sudo mongod --config /etc/mongod.conf --logpath /var/log/mongodb/mongod.log
+        ```
+1. mongo-shard-1 replicaset.
+    ```bash
+    mongo -port 27018
+    ```
+    ```bash
+    rs.initiate(
+        {
+            _id: "rs0",
+            members: [
+                { _id : 0, host : "35.162.18.250:27018"},
+                { _id : 1, host : "35.164.165.62:27018"}
+            ]
+        }
+    )
+
+1. Changes in mongodb-shard-2 instances
+
+    *  Make directory for data
+    ```bash
+    sudo mkdir -p /data/db
+    ```
+
+    * Give permission to mongod
+    ```bash
+    sudo chown -R mongod:mongod /data/db
+    ```
+
+    * Change mongod.conf
+
+        * Open file
+            ```bash
+            sudo vi /etc/mongod.conf
+            ```
+
+        * File changes
+            ```bash
+            storage:
+                dbpath: /data/db
+
+            net:
+                port: 27018
+                bindIp: 0.0.0.0
+
+            replication:
+                replSetName: rs1
+
+            sharding:
+                clusterRole: shardsvr
+            ```
+
+    * Start mongod daemon with new changes
+        ```bash
+        sudo mongod --config /etc/mongod.conf --logpath /var/log/mongodb/mongod.log
+        ```
+
+1. mongo-shard-2 replicaset.
+    ```bash
+    mongo -port 27018
+    ```
+    ```bash
+    rs.initiate(
+        {
+            _id: "rs1",
+            members: [
+                { _id : 0, host : "54.188.44.110:27018"},
+                { _id : 1, host : "54.212.88.211:27018"}
+            ]
+        }
+    )
+    ```
+
+1. Changes in mongose instance
+    * Open file
+        ```bash
+        sudo vi /etc/mongod.conf
+        ```
+
+    * File changes
+        ```bash
+        #storage:
+
+        net:
+            port: 27018
+            #bindIp: 0.0.0.0
+
+        sharding:
+            configDB:crs/54.186.55.221:27019, 52.24.77.19:27019
+        ```
+
+1. Start mongos
+    ```bash
+    sudo mongos --config /etc/mongod.conf --logpath /var/log/mongodb/mongod.log
+    ```
+
+1. Start mongos-cli
+    ```bash
+    mongo -port 27017
+    ```
+
+1. Add shards in mongos
+    ```bash
+    sh.addShard("rs0/35.162.18.250:27018,35.164.165.62:27018");
+    sh.addShard("rs1/34.220.35.72:27018,54.244.28.220:27018");
+    ```
+
+## Observations
+
+### Observations in MongoDB
+
+#### In normal condition
+
+MongoDB works on master-slave architecture and so it allows writes to the only master node and not the other nodes. Read permission is given to every slave nodes. When the data is inserted into the master node, it will be replicated to all the other nodes. Each slave node will require a permission to read the data.
+
+If the master node is unreachable, then an election algorithm will elect the new master node based on priority. If the previous node becomes reachable in some way then it will be converted to the secondary node.
+
+### During Partition
+
+If the partition has occurred into the slave node then that particular node will still let users access the database. But the new data inserted into the cluster will not be replicated into the partition node. It will still show the un-updated data.
+
+If the partition has occurred into the master node, then the cluster will run an election algorithm and elect a new master. The old primary will be changed to the secondary node. The new primary will allow the writes and the old primary will only allow reads for the data that it has.
+
+### After Partition Recovery
+
+After the partition has been recovered, the data from the primary will be replicated to the secondary node eventually. And all the data will be consistent.
+
+If the partition has occurred in the primary then after the partition recovery, the primary will be joined into the cluster as a secondary and the data from the new master will be replicated to this node.
+
+### Conclusion for MongoDB
+
+Where the consistency in data is more important than availability, MongoDB is a great option.
+
+### Observations in Riak
+
+#### In normal condition
+
+Riak cluster works as a chain and each cluster node is a part of the chain. Each node allows reads as well as writes. When a write is done in one node, the changes are replicated to all the other nodes.
+
+#### During Partition
+
+Riak allows read and writes during the partition, the partition node will let us change the values.  We can also change the same data in multiple nodes.
+
+#### After Partition
+
+After the partition has been resolved, the latest changes will be replicated to all the nodes across the cluster.
+
+#### Conclusion for Riak
+
+Riak is best used in places where data availability is more important than consistency. 
