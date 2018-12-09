@@ -725,6 +725,8 @@ Riak is best used in places where data availability is more important than consi
 
 ### MongoDB Sharding
 
+**Video Link <https://youtu.be/5iSl7OVLFRo>**
+
 #### Step 1: Create Security Groups
 
 Name: mongodb-shard-internal
@@ -1043,7 +1045,11 @@ Name: mongodb-shard-internal
     ```
 1. Adding mock data
     ```bash
-    db.users.insert("id":1,"first_name":"Esdras","last_name":"Ollander","email":"eollander0@msu.edu","gender":"Male","city":"Miaoya"});
+    db.users.insert({"id":1,"first_name":"Esdras","last_name":"Ollander","email":"eollander0@msu.edu","gender":"Male","city":"Miaoya"});
+    db.users.insert({"id":2,"first_name":"Shell","last_name":"Hector","email":"shector1@nature.com","gender":"Female","city":"Gegu"});
+    db.users.insert({"id":3,"first_name":"Josh","last_name":"Calan","email":"jcalan2@t.co","gender":"Male","city":"Kolor"});
+    db.users.insert({"id":4,"first_name":"Dillie","last_name":"Shewry","email":"dshewry3@yahoo.co.jp","gender":"Male","city":"Jaunpils"});
+    db.users.insert({"id":5,"first_name":"Enid","last_name":"Gunnell","email":"egunnell4@github.io","gender":"Female","city":"Mubo"});
     ```
 1. Reading data
     ```bash
